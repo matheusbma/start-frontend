@@ -18,7 +18,7 @@ export default function Home() {
     if (status === "authenticated") {
       const domain = session?.user?.email?.split("@")[1];
       if (domain == "cesar.school" || domain == "cesar.org") {
-        router.push("/calendar");
+        router.push("/home");
       } else {
         signOut();
         alert(
@@ -37,14 +37,16 @@ export default function Home() {
             src={cesarLogo}
             alt='CESAR logo'
             height={40}
+            priority
           />
         </div>
 
         <Image
-        className='mt-10 mb-14'
+        className='mt-14 mb-14'
           src={startLogo}
           alt='START logo'
           height={45}
+          priority
         />
 
         <button
@@ -55,6 +57,7 @@ export default function Home() {
             src={googleLogo}
             alt='Google logo'
             height={20}
+            priority
           />
           Acessar com Google
         </button>

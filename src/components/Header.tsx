@@ -16,6 +16,7 @@ export default function Header( { userImg, userName }: HeaderProps) {
         src={startLogo}
         alt='START logo'
         height={18}
+        priority
       />
       <div className="flex flex-row items-center justify-center">
         <p className="text-orange-500 font-semibold text-md px-3">{camelUserName}</p>
