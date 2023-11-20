@@ -4,15 +4,15 @@
 
 :root {
   --foreground-rgb: 255, 255, 255;
-  --background-start-rgb: 237, 107, 45;
-  --background-end-rgb: 204, 71, 35;
+  --background-start-rgb: 238, 106, 5;
+  --background-end-rgb: 238, 106, 5;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
     --foreground-rgb: 255, 255, 255;
-    --background-start-rgb: 237, 107, 45;
-    --background-end-rgb: 204, 71, 35;
+    --background-start-rgb: 238, 106, 5;
+    --background-end-rgb: 238, 106, 5;
   }
 }
 
@@ -24,4 +24,9 @@ body {
       rgb(var(--background-end-rgb))
     )
     rgb(var(--background-start-rgb));
+}
+
+.rbc-event, .rbc-day-slot .rbc-background-event3 {
+  background-color: rgb(var(--background-end-rgb)) !important;
+  border-color: rgb(var(--background-end-rgb)) !important;
 }
