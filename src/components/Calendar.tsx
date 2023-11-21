@@ -1,8 +1,13 @@
-import React, { use, useEffect } from "react";
+import React, { use, useEffect, useState } from "react";
 import moment from "moment";
 import { Calendar, momentLocalizer } from "react-big-calendar";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 
+import {
+  formatMesaEvent,
+  formatMaquinaELaboratorioEvent,
+} from "@/utils/convert";
+import axios from "axios";
 const localizer = momentLocalizer(moment);
 
 interface CalendarProps {
@@ -17,43 +22,50 @@ interface CalendarProps {
   }[];
 }
 
-export default function UserCalendar( { eventsList }: CalendarProps) {
+interface Event {
+  id: any;
+  title: string;
+  start: Date;
+  end: Date;
+}
+
+export default function UserCalendar({ eventsList }: CalendarProps) {
+  const [formattedEvents, setFormattedEvents] = useState<Event[]>([]);
 
   useEffect(() => {
-    if (eventsList) {
-      console.log(eventsList);
-    }
-  }, [eventsList]);
-  
- function formatEvents() {
-    const events = eventsList.map((event) => {
-      const date = moment(event.data).format("YYYY-MM-DD");
-      const start = moment(date + " " + event.horaInicio).toDate();
-      const end = moment(date + " " + event.horaFim).toDate();
-      const title = event.reserva + " " + event.id;
-      return {
-        id: event.id,
-        title: title,
-        start: start,
-        end: end,
-      };
-    });
-    return events;
-  }
+    async function processEvents() {
+      const promises = eventsList.map(async (event) => {
+        if (event.reserva === "mesa") {
+          try {
+            const response = await axios.get(`http://localhost:8080/mesa/${event.id_reserva}`);
+            const lab = response.data.id_laboratorio;
+            return formatMesaEvent(event, lab);
+          } catch (error) {
+            console.error("Error fetching labId: ", error);
+          }
+        } else {
+          return formatMaquinaELaboratorioEvent(event);
+        } 
+      });
 
-  const events = formatEvents();
+      const events = await Promise.all(promises);
+      setFormattedEvents(events);
+    }
+
+    processEvents();
+  }, [eventsList]);
+
 
   return (
     <div>
       <Calendar
         className="text-black bg-white rounded-xl p-4"
         localizer={localizer}
-        events={events}
+        events={formattedEvents.filter((event) => event !== null)}
         startAccessor="start"
         endAccessor="end"
-        style={{ height: 550, }}
+        style={{ height: 550 }}
       />
     </div>
   );
-};
-
+}
