@@ -20,8 +20,8 @@ interface UserProps {
 
 interface EventProps {
   id: number;
-  id_usuario: number;
-  id_reserva: number;
+  idUsuario: number;
+  idReserva: number;
   data: string;
   horaInicio: string;
   horaFim: string;
@@ -32,8 +32,8 @@ interface EventProps {
 interface formattedEventProps {
   title: string;
   id: number;
-  id_usuario: number;
-  id_reserva: number;
+  idUsuario: number;
+  idReserva: number;
   data: string;
   horaInicio: string;
   horaFim: string;
@@ -84,7 +84,7 @@ export default function Editor() {
         .then((response) => {
           const events = response.data;
           const userEventsList = events.filter(
-            (event: { id_usuario: number }) => event.id_usuario === user.id
+            (event: { idUsuario: number }) => event.idUsuario === user.id
           );
           const validEvents = userEventsList.filter(
             (event: { data: string }) =>
@@ -105,15 +105,15 @@ export default function Editor() {
           if (event.reserva === "mesa") {
             try {
               const response = await axios.get(
-                `http://localhost:8080/mesa/${event.id_reserva}`
+                `http://localhost:8080/mesa/${event.idReserva}`
               );
-              const lab = response.data.id_laboratorio;
+              const lab = response.data.idLaboratorio;
               const formatted = formatMesaEvent(event, lab);
               return {
                 title: formatted.title,
                 id: formatted.id,
-                id_usuario: event.id_usuario,
-                id_reserva: event.id_reserva,
+                idUsuario: event.idUsuario,
+                idReserva: event.idReserva,
                 data: formatData(event.data),
                 horaInicio: event.horaInicio,
                 horaFim: event.horaFim,
@@ -127,8 +127,8 @@ export default function Editor() {
             return {
               title: formatted.title,
               id: formatted.id,
-              id_usuario: event.id_usuario,
-              id_reserva: event.id_reserva,
+              idUsuario: event.idUsuario,
+              idReserva: event.idReserva,
               data: formatData(event.data),
               horaInicio: event.horaInicio,
               horaFim: event.horaFim,

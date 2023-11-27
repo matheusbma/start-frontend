@@ -11,9 +11,9 @@ interface MenuProps {
     email: string;
     senha: string;
     acesso: string;
-    num_de_usos_maquina_1: number;
-    num_de_usos_maquina_2: number;
-    num_de_usos_maquina_3: number;
+    numDeUsosMaquina1: number;
+    numDeUsosMaquina2: number;
+    numDeUsosMaquina3: number;
   };
   userName: string;
   userImg: string;
@@ -51,9 +51,9 @@ export default function Menu({ user, userName, userImg }: MenuProps) {
     if (user) {
      const convertedAcesso = convertToCamelCase(user.acesso);
       setAcesso(convertedAcesso);
-      setUsosMaquina1(user.num_de_usos_maquina_1);
-      setUsosMaquina2(user.num_de_usos_maquina_2);
-      setUsosMaquina3(user.num_de_usos_maquina_3);
+      setUsosMaquina1(user.numDeUsosMaquina1);
+      setUsosMaquina2(user.numDeUsosMaquina2);
+      setUsosMaquina3(user.numDeUsosMaquina3);
     }
   }, [user]);
 

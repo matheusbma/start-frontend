@@ -31,8 +31,8 @@ const localizer = dateFnsLocalizer({
 interface CalendarProps {
   eventsList: {
     id: number;
-    id_usuario: number;
-    id_reserva: number;
+    idUsuario: number;
+    idReserva: number;
     data: string;
     horaInicio: string;
     horaFim: string;
@@ -59,9 +59,9 @@ export default function UserCalendar({ eventsList }: CalendarProps) {
           if (event.reserva === "mesa") {
             try {
               const response = await axios.get(
-                `http://localhost:8080/mesa/${event.id_reserva}`
+                `http://localhost:8080/mesa/${event.idReserva}`
               );
-              const lab = response.data.id_laboratorio;
+              const lab = response.data.idLaboratorio;
               return formatMesaEvent(event, lab);
             } catch (error) {
               console.error("Error fetching labId: ", error);

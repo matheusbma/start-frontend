@@ -11,8 +11,8 @@ import axios from "axios";
 interface EventProps {
   title: string;
   id: number;
-  id_usuario: number;
-  id_reserva: number;
+  idUsuario: number;
+  idReserva: number;
   data: string;
   horaInicio: string;
   horaFim: string;
@@ -50,8 +50,8 @@ export default function DateTimeDialog({
   const handleSave = () => {
     axios
       .put("http://localhost:8080/" + "agendamentos/" + event?.id, {
-        id_usuario: event?.id_usuario,
-        id_reserva: event?.id_reserva,
+        idUsuario: event?.idUsuario,
+        idReserva: event?.idReserva,
         data: day,
         horaInicio: startTime,
         horaFim: endTime,

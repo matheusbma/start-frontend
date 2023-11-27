@@ -15,7 +15,7 @@ export function formatMesaEvent(event: any, lab: any) {
   const title =
     convertToCamelCase(event.reserva) +
     " " +
-    event.id_reserva +
+    event.idReserva +
     " - Laboratório " +
     lab;
   return {
@@ -30,7 +30,7 @@ export function formatMaquinaELaboratorioEvent(event: any) {
   const date = moment(event.data).format("YYYY-MM-DD");
   const start = moment(date + " " + event.horaInicio).toDate();
   const end = moment(date + " " + event.horaFim).toDate();
-  const title = convertToCamelCase(event.reserva) + " " + event.id_reserva;
+  const title = convertToCamelCase(event.reserva) + " " + event.idReserva;
   return {
     id: event.id,
     title: title,

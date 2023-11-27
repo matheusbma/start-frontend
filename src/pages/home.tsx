@@ -13,15 +13,15 @@ interface UserProps {
   email: string;
   senha: string;
   acesso: string;
-  num_de_usos_maquina_1: number;
-  num_de_usos_maquina_2: number;
-  num_de_usos_maquina_3: number;
+  numDeUsosMaquina1: number;
+  numDeUsosMaquina2: number;
+  numDeUsosMaquina3: number;
 }
 
 interface EventProps {
   id: number;
-  id_usuario: number;
-  id_reserva: number;
+  idUsuario: number;
+  idReserva: number;
   data: string;
   horaInicio: string;
   horaFim: string;
@@ -60,9 +60,9 @@ export default function home() {
               email: session.user?.email,
               senha: "123456",
               acesso: "aluno",
-              num_de_usos_maquina_1: 0,
-              num_de_usos_maquina_2: 0,
-              num_de_usos_maquina_3: 0,
+              numDeUsosMaquina1: 0,
+              numDeUsosMaquina2: 0,
+              numDeUsosMaquina3: 0,
             });
           }
         })
@@ -80,7 +80,7 @@ export default function home() {
         .then((response) => {
           const events = response.data;
           const userEventsList = events.filter(
-            (event: { id_usuario: number }) => event.id_usuario === user.id
+            (event: { idUsuario: number }) => event.idUsuario === user.id
           );
           setEventsList(userEventsList);
         })
