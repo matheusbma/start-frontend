@@ -4,15 +4,15 @@
 
 :root {
   --foreground-rgb: 255, 255, 255;
-  --background-start-rgb: 238, 106, 5;
-  --background-end-rgb: 238, 106, 5;
+  --background-start-rgb: 235, 84, 40;
+  --background-end-rgb: 235, 84, 40;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
     --foreground-rgb: 255, 255, 255;
-    --background-start-rgb: 238, 106, 5;
-    --background-end-rgb: 238, 106, 5;
+    --background-start-rgb: 235, 84, 40;
+    --background-end-rgb: 235, 84, 40;
   }
 }
 
@@ -29,4 +29,38 @@ body {
 .rbc-event, .rbc-day-slot .rbc-background-event3 {
   background-color: rgb(var(--background-end-rgb)) !important;
   border-color: rgb(var(--background-end-rgb)) !important;
+}
+
+.rbc-ellipsis, .rbc-show-more, .rbc-row-segment .rbc-event-content, .rbc-event-label {
+  white-space: normal !important;
+  }
+
+.react-datepicker, .react-datepicker__header:not(.react-datepicker__header--has-time-select), .react-datepicker__current-month,  .react-datepicker__day-name, .react-datepicker__day, .react-datepicker__time-name {
+  background-color: rgb(var(--background-end-rgb)) !important;
+  color: rgb(var(--foreground-rgb)) !important;
+}
+
+.react-datepicker__day--selected, .react-datepicker__day--in-selecting-range, .react-datepicker__day--in-range, .react-datepicker__month-text--selected, .react-datepicker__month-text--in-selecting-range, .react-datepicker__month-text--in-range, .react-datepicker__quarter-text--selected, .react-datepicker__quarter-text--in-selecting-range, .react-datepicker__quarter-text--in-range, .react-datepicker__year-text--selected, .react-datepicker__year-text--in-selecting-range, .react-datepicker__year-text--in-range {
+  background-color: rgb(var(--foreground-rgb)) !important;
+  color: rgb(var(--background-start-rgb)) !important;
+}
+
+.react-datepicker__year-read-view--down-arrow, .react-datepicker__month-read-view--down-arrow, .react-datepicker__month-year-read-view--down-arrow, .react-datepicker__navigation-icon::before {
+  border-color: rgb(var(--foreground-rgb)) !important;
+}
+
+label[data-shrink=false]+.MuiInputBase-formControl .css-1x51dt5-MuiInputBase-input-MuiInput-input {
+  -webkit-opacity: 0;
+}
+
+.rbc-toolbar {
+  font-size: 14px !important;
+}
+
+.rbc-agenda-view {
+  font-size: 12px !important;
+}
+
+.rbc-month-header {
+  font-size: 12px !important;
 }

@@ -50,7 +50,7 @@ export default function Home() {
         />
 
         <button
-          className="flex h-12 w-64 px-8 justify-between items-center font-bold text-white bg-orange-600 rounded-3xl "
+          className="flex h-12 w-64 px-8 justify-between items-center font-bold text-white bg-orange-500 rounded-3xl "
           onClick={handleSignIn}
         >
           <Image

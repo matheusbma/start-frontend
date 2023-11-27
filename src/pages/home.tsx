@@ -1,12 +1,10 @@
 import axios from "axios";
-import router from "next/router";
-import { use, useEffect, useState } from "react";
-import { useSession, signIn, signOut } from "next-auth/react";
+import { useEffect, useState } from "react";
+import { useSession } from "next-auth/react";
 
 import Header from "../components/Header";
 import UserCalendar from "../components/Calendar";
-import moment from "moment";
-import { convertToCamelCase } from "@/utils/convert";
+import Menu from "../components/Menu";
 
 interface UserProps {
   id: number;
@@ -34,22 +32,16 @@ export default function home() {
   const { data: session, status } = useSession();
 
   const userImg = session?.user?.image;
-  const userName = session?.user?.name?.split(" ")[0];
+  const userName = session?.user?.name;
+  const userShortName = session?.user?.name?.split(" ")[0];
   const userEmail = session?.user?.email;
 
-  const [user, setUser] = useState<UserProps>();
+  const [user, setUser] = useState<UserProps>(
+    undefined as unknown as UserProps
+  );
   const [eventsList, setEventsList] = useState<EventProps[]>([]);
 
-  useEffect(() => {
-    if (status === "unauthenticated") {
-      router.push("/");
-    }
-  }, [status]);
-
-  function handleSignOut() {
-    signOut();
-  }
-
+  // Check if user exists in database
   if (!user) {
     if (session) {
       axios
@@ -60,12 +52,10 @@ export default function home() {
             (user: { email: string }) => user.email === userEmail
           );
           if (user) {
-            console.log(user);
             setUser(user);
           } else {
-            axios
-            .post("http://localhost:8080/" + "usuarios", {
-              matricula: session.user?.email?.split("@")[0],
+            axios.post("http://localhost:8080/" + "usuarios", {
+              matricula: session.user?.name?.split(" ")[0],
               nome: session.user?.name,
               email: session.user?.email,
               senha: "123456",
@@ -73,7 +63,7 @@ export default function home() {
               num_de_usos_maquina_1: 0,
               num_de_usos_maquina_2: 0,
               num_de_usos_maquina_3: 0,
-            })
+            });
           }
         })
         .catch((error) => {
@@ -82,6 +72,7 @@ export default function home() {
     }
   }
 
+  // Take events from database
   useEffect(() => {
     if (user) {
       axios
@@ -89,7 +80,7 @@ export default function home() {
         .then((response) => {
           const events = response.data;
           const userEventsList = events.filter(
-            (event: { id_usuario: number }) => event.id_usuario === user.id 
+            (event: { id_usuario: number }) => event.id_usuario === user.id
           );
           setEventsList(userEventsList);
         })
@@ -100,24 +91,24 @@ export default function home() {
   }, [user]);
 
   return (
-    <div>
-      <Header userImg={userImg ?? ""} userName={userName ?? ""} />
-      <div className="flex min-h-screen flex-col items-center mt-8 p-0">
+    <div className="">
+      <Header userImg={userImg ?? ""} userName={userShortName ?? ""} />
+      <div className="flex flex-col justify-center sm:flex-row mt-12">
         {eventsList ? (
-          <UserCalendar eventsList={eventsList} />
+          <>
+            <UserCalendar eventsList={eventsList} />
+            <Menu
+              user={user}
+              userName={userName ?? ""}
+              userImg={userImg ?? ""}
+            />
+          </>
         ) : (
           <div className="flex flex-col items-center">
             <h1 className="text-2xl font-bold">Carregando...</h1>
             <div className="animate-spin mt-7 rounded-full h-32 w-32 border-t-2 border-b-2 border-white"></div>
           </div>
         )}
-
-        <button
-          className="flex items-center mt-10 mb-32 text-orange-600 p-6 bg-white rounded-3xl h-10"
-          onClick={handleSignOut}
-        >
-          Logout
-        </button>
       </div>
     </div>
   );

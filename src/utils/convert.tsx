@@ -38,3 +38,8 @@ export function formatMaquinaELaboratorioEvent(event: any) {
     end: end,
   };
 }
+
+export function formatData(data: string) {
+  const date = moment(data).format("DD/MM/YYYY");
+  return date;
+}
