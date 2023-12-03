@@ -179,6 +179,11 @@ export default function Editor() {
         <FaArrowLeft className="h-6 w-6 text-white" />
       </button>
       <div className="flex flex-col justify-center  max-w-screen-lg bg-white rounded-xl">
+      <div className="flex flex-col items-center mt-5">
+          <h1 className="text-orange-500 text-xl font-extrabold">
+            Editar Horário
+          </h1>
+        </div>
         {formattedEvents.length === 0 ? (
           <div className="flex flex-col justify-center items-center p-12">
             <h1 className="text-2xl text-orange-500 self-center">

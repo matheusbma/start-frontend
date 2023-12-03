@@ -82,7 +82,7 @@ label[data-shrink='false']
 }
 
 .react-datepicker__month-container {
-  width: 350px;
+  width: 320px;
 }
 
 .react-datepicker__header {
@@ -94,3 +94,7 @@ label[data-shrink='false']
   line-height: 40px; 
   margin: 1.5px;
 }
+
+.react-datepicker__day--keyboard-selected, .react-datepicker__month-text--keyboard-selected, .react-datepicker__quarter-text--keyboard-selected, .react-datepicker__year-text--keyboard-selected {
+  background-color: #e5e7eb !important;
+} 
