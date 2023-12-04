@@ -29,7 +29,6 @@ body {
 .rbc-event,
 .rbc-day-slot .rbc-background-event3 {
   background-color: rgb(var(--background-end-rgb)) !important;
-  border-color: rgb(var(--background-end-rgb)) !important;
 }
 
 .rbc-ellipsis,

@@ -8,14 +8,17 @@ import {
   isAfter,
   isBefore,
   isEqual,
+  isWithinInterval,
   parseISO,
+  set,
   setHours,
   setMinutes,
-  startOfDay,
+  setSeconds,
 } from "date-fns";
 import { useRouter } from "next/router";
 import { FaArrowLeft } from "react-icons/fa";
 import { useSession } from "next-auth/react";
+
 
 interface UserProps {
   id: number;
@@ -39,33 +42,64 @@ interface EventProps {
   reserva: string;
 }
 
+interface AvailabilityProps {
+  available: boolean;
+  type: "mesa" | "maquina" | "laboratorio";
+}
+
 const buttonStyle =
   "flex justify-center items-center font-light text-xs text-white bg-orange-500 rounded-md h-8 w-24";
 const disableButtonStyle =
   "flex justify-center items-center font-light text-xs text-white bg-zinc-400 rounded-md h-8 w-24";
-const labCapacities: { [lab: string]: number } = {
-  lab1: 16,
-  lab2: 14,
-};
+
 const incrementInMinutes: number = 60;
-const openingTime: Date = setHours(setMinutes(new Date(), 0), 8);
-const closingTime: Date = setHours(setMinutes(new Date(), 0), 18);
+const openingTime: Date = setHours(setMinutes(setSeconds(new Date(), 0), 0), 8);
+const endTime: Date = setHours(setMinutes(setSeconds(new Date(), 0), 0), 9);
+const closingTime: Date = setHours(
+  setMinutes(setSeconds(new Date(), 0), 0),
+  18
+);
 
 export default function Agendamento() {
-  const { data: session } = useSession();
   const router = useRouter();
+  const { data: session } = useSession();
   const [user, setUser] = useState<UserProps | null>(null);
 
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-  const [selectedType, setSelectedType] = useState<"mesa" | "maquina" | "laboratorio" >("mesa");
-  const [horarioInicioAgendamento, setHorarioInicioAgendamento] =useState<Date>();
-  const [horarioFimAgendamento, setHorarioFimAgendamento] = useState<Date>();
+  const [selectedType, setSelectedType] = useState<
+    "mesa" | "maquina" | "laboratorio"
+  >("mesa");
 
-  const [mesaScheduleOnDay, setMesaScheduleOnDay] = useState<EventProps[]>([]);
-  const [maquinaScheduleOnDay, setMaquinaScheduleOnDay] = useState<EventProps[]>([]);
-  const [labScheduleOnDay, setLabScheduleOnDay] = useState<EventProps[]>([]);
+  const [startScheduleTime, setStartScheduleTime] = useState<Date>();
+  const [endScheduleTime, setEndScheduleTime] = useState<Date>();
+
+  const [mesaScheduleOnDayLab1, setMesaScheduleOnDayLab1] = useState<
+    EventProps[]
+  >([]);
+  const [mesaScheduleOnDayLab2, setMesaScheduleOnDayLab2] = useState<
+    EventProps[]
+  >([]);
+  const [maquinaScheduleOnDayMaquina1, setMaquinaScheduleOnDayMaquina1] =
+    useState<EventProps[]>([]);
+  const [maquinaScheduleOnDayMaquina2, setMaquinaScheduleOnDayMaquina2] =
+    useState<EventProps[]>([]);
+  const [maquinaScheduleOnDayMaquina3, setMaquinaScheduleOnDayMaquina3] =
+    useState<EventProps[]>([]);
+  const [labScheduleOnDayLab1, setLabScheduleOnDayLab1] = useState<
+    EventProps[]
+  >([]);
+  const [labScheduleOnDayLab2, setLabScheduleOnDayLab2] = useState<
+    EventProps[]
+  >([]);
+
+  const [labMesaNumber, setLabMesaNumber] = useState<number>(1);
+  const [maquinaNumber, setMaquinaNumber] = useState<number>(1);
+  const [labNumber, setLabNumber] = useState<number>(1);
+
   const [availableStartTimes, setAvailableStartTimes] = useState<string[]>([]);
   const [availableEndTimes, setAvailableEndTimes] = useState<string[]>([]);
+  const [selectedStartTime, setSelectedStartTime] = useState<string>("");
+  const [selectedEndTime, setSelectedEndTime] = useState<string>("");
 
   if (!user) {
     if (session) {
@@ -85,6 +119,40 @@ export default function Agendamento() {
         });
     }
   }
+
+  const handleCriarAgendamento = async () => {
+    const formattedDate = startScheduleTime
+      ? format(startScheduleTime, "yyyy-MM-dd")
+      : "";
+    const formattedStartTime = startScheduleTime
+      ? startScheduleTime.toISOString().substr(11, 5)
+      : "";
+    const formattedEndTime = endScheduleTime
+      ? endScheduleTime.toISOString().substr(11, 5)
+      : "";
+
+    if (!startScheduleTime || !endScheduleTime) {
+      alert("Selecione um horário de início e um horário de término");
+      return;
+    }
+
+    const response = await axios
+      .post("http://localhost:8080/" + "agendamentos", {
+        idUsuario: user?.id,
+        idReserva: 1,
+        data: formattedDate,
+        horaInicio: formattedStartTime,
+        horaFim: formattedEndTime,
+        reserva: selectedType,
+      })
+      .then((response) => {
+        alert("Agendamento criado com sucesso!");
+        router.push("/home");
+      })
+      .catch((error) => {
+        console.error("Erro ao criar o agendamento:", error);
+      });
+  };
 
   const handleDateChange = async (date: Date) => {
     setSelectedDate(date);
@@ -111,16 +179,53 @@ export default function Agendamento() {
           const labEventsOnDate = labEvents.filter(
             (event: { data: string }) => event.data === formattedDate
           );
+          const mesaLab1EventsOnDate = mesaEventsOnDate.filter(
+            (event: { idReserva: number }) =>
+              event.idReserva >= 1 && event.idReserva <= 16
+          );
+          const mesaLab2EventsOnDate = mesaEventsOnDate.filter(
+            (event: { idReserva: number }) =>
+              event.idReserva >= 17 && event.idReserva <= 30
+          );
+          const maquinaMaquina1EventsOnDate = maquinaEventsOnDate.filter(
+            (event: { idReserva: number }) => event.idReserva === 1
+          );
+          const maquinaMaquina2EventsOnDate = maquinaEventsOnDate.filter(
+            (event: { idReserva: number }) => event.idReserva === 2
+          );
+          const maquinaMaquina3EventsOnDate = maquinaEventsOnDate.filter(
+            (event: { idReserva: number }) => event.idReserva === 3
+          );
+          const labLab1EventsOnDate = labEventsOnDate.filter(
+            (event: { idReserva: number }) => event.idReserva === 1
+          );
+          const labLab2EventsOnDate = labEventsOnDate.filter(
+            (event: { idReserva: number }) => event.idReserva === 2
+          );
           return {
-            mesa: mesaEventsOnDate,
-            maquina: maquinaEventsOnDate,
-            lab: labEventsOnDate,
+            mesa: {
+              lab1: mesaLab1EventsOnDate,
+              lab2: mesaLab2EventsOnDate,
+            },
+            maquina: {
+              maquina1: maquinaMaquina1EventsOnDate,
+              maquina2: maquinaMaquina2EventsOnDate,
+              maquina3: maquinaMaquina3EventsOnDate,
+            },
+            lab: {
+              lab1: labLab1EventsOnDate,
+              lab2: labLab2EventsOnDate,
+            },
           };
         }
       );
-      setMesaScheduleOnDay(response.mesa);
-      setMaquinaScheduleOnDay(response.maquina);
-      setLabScheduleOnDay(response.lab);
+      setMesaScheduleOnDayLab1(response.mesa.lab1);
+      setMesaScheduleOnDayLab2(response.mesa.lab2);
+      setMaquinaScheduleOnDayMaquina1(response.maquina.maquina1);
+      setMaquinaScheduleOnDayMaquina2(response.maquina.maquina2);
+      setMaquinaScheduleOnDayMaquina3(response.maquina.maquina3);
+      setLabScheduleOnDayLab1(response.lab.lab1);
+      setLabScheduleOnDayLab2(response.lab.lab2);
     } catch (error) {
       console.error("Erro ao buscar os horários:", error);
     }
@@ -134,74 +239,135 @@ export default function Agendamento() {
     router.back();
   }
 
-  // Dentro do useEffect que calcula os horários disponíveis de início:
-  useEffect(() => {
-    const startTime = setHours(setMinutes(selectedDate, 0), 8);
-    const endTime = setHours(setMinutes(selectedDate, 0), 18);
+  function generateStartTimeSlots(
+    startTime: Date,
+    endTime: Date,
+    increment: number
+  ) {
+    let times = [];
+    let currentTime = new Date(startTime.getTime());
 
-    let timesStart = [];
-    let currentTimeStart = startTime;
-
-    while (isBefore(currentTimeStart, endTime)) {
-      timesStart.push(currentTimeStart);
-      currentTimeStart = addMinutes(currentTimeStart, incrementInMinutes);
+    while (isBefore(currentTime, endTime)) {
+      times.push(new Date(currentTime.getTime()));
+      currentTime = addMinutes(currentTime, increment);
     }
 
-    const bookedTimes = mesaScheduleOnDay.map((reservation) => ({
-      start: parseISO(reservation.data + " " + reservation.horaInicio),
-      end: parseISO(reservation.data + " " + reservation.horaFim),
-    }));
-
-    const newAvailableStartTimes = timesStart
-      .filter((startTime) => {
-        return !bookedTimes.some(
-          (bookedTime) =>
-            isBefore(startTime, bookedTime.end) &&
-            (isAfter(startTime, bookedTime.start) ||
-              isEqual(startTime, bookedTime.start))
-        );
-      })
-      .map((time) => format(time, "HH:mm"));
-    setAvailableStartTimes(newAvailableStartTimes);
-  }, [mesaScheduleOnDay, selectedDate]);
-
-  // useEffect para calcular os horários disponíveis de término (fim)
- // Dentro do useEffect para calcular os horários disponíveis de término (fim)
-useEffect(() => {
-  if (!horarioInicioAgendamento) {
-    setAvailableEndTimes([]);
-    return;
+    return times;
   }
 
-  const endTime = setHours(setMinutes(selectedDate, 0), 18);
+  function generateEndTimeSlots(
+    startTime: Date,
+    endTime: Date,
+    increment: number,
+    selectedDate: Date
+  ) {
+    let times = [];
+    let currentTime = new Date(startTime.getTime());
+    let newEndTime = new Date(
+      selectedDate.getFullYear(),
+      selectedDate.getMonth(),
+      selectedDate.getDate(),
+      endTime.getHours(),
+      endTime.getMinutes(),
+      endTime.getSeconds()
+    );
 
-  const bookedTimes = mesaScheduleOnDay.map((reservation) => ({
-    start: parseISO(reservation.data + ' ' + reservation.horaInicio),
-    end: parseISO(reservation.data + ' ' + reservation.horaFim),
-  }));
+    while (isBefore(currentTime, newEndTime) || isEqual(currentTime, newEndTime)) {
+      times.push(new Date(currentTime.getTime()));
+      currentTime = addMinutes(currentTime, increment);
+    }
 
-  // Encontra o próximo agendamento após o horário de início selecionado
-  const nextBookingStart = bookedTimes.find((time) =>
-    isAfter(time.start, horarioInicioAgendamento)
-  );
-
-  // Define o horário final de disponibilidade com base no próximo agendamento ou no horário de fechamento
-  const lastAvailableEndTime = nextBookingStart
-    ? nextBookingStart.start
-    : endTime;
-
-  let timesEnd = [];
-  let currentTimeEnd = addMinutes(horarioInicioAgendamento, incrementInMinutes);
-
-  while (isBefore(currentTimeEnd, lastAvailableEndTime)) {
-    timesEnd.push(currentTimeEnd);
-    currentTimeEnd = addMinutes(currentTimeEnd, incrementInMinutes);
+    return times;
   }
 
-  const newAvailableEndTimes = timesEnd.map((time) => format(time, 'HH:mm'));
+  function changeDate(selectedDate: Date, time: Date[]) {
+    return time.map((time) => {
+      return set(selectedDate, {
+        hours: time.getHours(),
+        minutes: time.getMinutes(),
+        seconds: 0,
+      });
+    }
+    )
+  }
 
-  setAvailableEndTimes(newAvailableEndTimes);
-}, [horarioInicioAgendamento, mesaScheduleOnDay]);
+  useEffect(() => {
+    const updateAvailableTimes = (schedules: any[]) => {
+      
+      let startTimes = generateStartTimeSlots(
+        openingTime,
+        closingTime,
+        incrementInMinutes
+      );
+      let endTimes = generateEndTimeSlots(
+        startScheduleTime ? startScheduleTime : openingTime,
+        closingTime,
+        incrementInMinutes,
+        selectedDate
+      );
+
+      let newStartTimes = changeDate(selectedDate, startTimes)
+
+      // Filtrar os horários ocupados dos horários iniciais disponíveis
+      schedules.forEach((schedule) => {
+        const startTime = parseISO(schedule.data + "T" + schedule.horaInicio);
+        const endTime = parseISO(schedule.data + "T" + schedule.horaFim);
+        newStartTimes = newStartTimes.filter((slotStartTime) => {
+          return !isWithinInterval(slotStartTime, {
+            start: startTime,
+            end: endTime,
+          });
+        });
+      });
+
+      setAvailableStartTimes(newStartTimes.map((time) => format(time, "HH:mm")));
+      setAvailableEndTimes(endTimes.map((time) => format(time, "HH:mm")));
+    };
+
+    if (selectedType == "mesa") {
+      if (labMesaNumber == 1) {
+        updateAvailableTimes(mesaScheduleOnDayLab1);
+      }
+      if (labMesaNumber == 2) {
+        updateAvailableTimes(mesaScheduleOnDayLab2);
+      }
+    }
+
+    if (selectedType == "maquina") {
+      if (maquinaNumber == 1) {
+        updateAvailableTimes(maquinaScheduleOnDayMaquina1);
+      }
+      if (maquinaNumber == 2) {
+        updateAvailableTimes(maquinaScheduleOnDayMaquina2);
+      }
+      if (maquinaNumber == 3) {
+        updateAvailableTimes(maquinaScheduleOnDayMaquina3);
+      }
+    }
+
+    if (selectedType == "laboratorio") {
+      if (labNumber == 1) {
+        updateAvailableTimes(labScheduleOnDayLab1);
+      }
+      if (labNumber == 2) {
+        updateAvailableTimes(labScheduleOnDayLab2);
+      }
+    }
+  }, [
+    selectedType,
+    selectedDate,
+    labMesaNumber,
+    maquinaNumber,
+    labNumber,
+    mesaScheduleOnDayLab1,
+    mesaScheduleOnDayLab2,
+    maquinaScheduleOnDayMaquina1,
+    maquinaScheduleOnDayMaquina2,
+    maquinaScheduleOnDayMaquina3,
+    labScheduleOnDayLab1,
+    labScheduleOnDayLab2,
+    startScheduleTime,
+  ]);
 
   return (
     <div className="flex flex-col h-full w-full justify-center items-center">
@@ -305,49 +471,140 @@ useEffect(() => {
             </div>
           </div>
 
-          <div className="flex flex-row">
-            <div className="flex flex-col items-center border-[1px] overflow-auto border-[#aeaeae] rounded-l-md w-[150px] h-[267px]">
-              {availableStartTimes.map((time, index) => (
+          <div className="flex flex-col mt-6">
+            {selectedType === "mesa" ? (
+              <>
                 <button
-                  key={index}
-                  className="flex p-3 border-b text-black text-xs border-[#aeaeae] w-full text-center hover:bg-[#f5f5f5]"
                   onClick={() => {
-                    setHorarioInicioAgendamento(
-                      new Date(
+                    setLabMesaNumber(1);
+                  }}
+                  className={buttonStyle + " mb-3"}
+                >
+                  Laboratório 1
+                </button>
+                <button
+                  onClick={() => {
+                    setLabMesaNumber(2);
+                  }}
+                  className={buttonStyle}
+                >
+                  Laboratório 2
+                </button>
+              </>
+            ) : (
+              <></>
+            )}
+            {selectedType === "maquina" ? (
+              <>
+                <button
+                  onClick={() => {
+                    setMaquinaNumber(1);
+                  }}
+                  className={buttonStyle + " mb-3"}
+                >
+                  Máquina 1
+                </button>
+                <button
+                  onClick={() => {
+                    setMaquinaNumber(2);
+                  }}
+                  className={buttonStyle + " mb-3"}
+                >
+                  Máquina 2
+                </button>
+                <button
+                  onClick={() => {
+                    setMaquinaNumber(3);
+                  }}
+                  className={buttonStyle}
+                >
+                  Máquina 3
+                </button>
+              </>
+            ) : (
+              <></>
+            )}
+            {selectedType === "laboratorio" ? (
+              <>
+                <button
+                  onClick={() => {
+                    setLabNumber(1);
+                  }}
+                  className={buttonStyle + " mb-3"}
+                >
+                  Laboratório 1
+                </button>
+                <button
+                  onClick={() => {
+                    setLabNumber(2);
+                  }}
+                  className={buttonStyle}
+                >
+                  Laboratório 2
+                </button>
+              </>
+            ) : (
+              <></>
+            )}
+          </div>
+
+          <div className="flex flex-col items-end">
+            <div className="flex flex-row">
+              <div className="flex flex-col items-center border-[1px] overflow-auto border-[#aeaeae] rounded-l-md w-[150px] h-[267px]">
+                {availableStartTimes.map((time, index) => (
+                  <button
+                    key={index}
+                    className={`flex p-3 border-b text-black text-xs border-[#aeaeae] w-full text-center hover:bg-orange-500 ${
+                      time === selectedStartTime
+                        ? "bg-orange-500 text-white"
+                        : ""
+                    }`}
+                    onClick={() => {
+                      const newStartTime = new Date(
                         selectedDate.getFullYear(),
                         selectedDate.getMonth(),
                         selectedDate.getDate(),
                         parseInt(time.split(":")[0]),
                         parseInt(time.split(":")[1])
-                      )
-                    );
-                  }}
-                >
-                  {time}
-                </button>
-              ))}
-            </div>
-            <div className="flex flex-col items-center border-[1px] overflow-auto border-[#aeaeae] rounded-r-md w-[150px] h-[267px]">
-              {availableEndTimes.map((time, index) => (
-                <button
-                  key={index}
-                  className="flex p-3 border-b text-black text-xs border-[#aeaeae] w-full text-center hover:bg-[#f5f5f5]"
-                  onClick={() => {
-                    setHorarioFimAgendamento(
-                      new Date(
+                      );
+                      setStartScheduleTime(newStartTime);
+                      setSelectedStartTime(format(newStartTime, "HH:mm"));
+                    }}
+                  >
+                    {time}
+                  </button>
+                ))}
+              </div>
+              <div className="flex flex-col items-center border-[1px] overflow-auto border-[#aeaeae] rounded-r-md w-[150px] h-[267px]">
+                {availableEndTimes.map((time, index) => (
+                  <button
+                    key={index}
+                    className={`flex p-3 border-b text-black text-xs border-[#aeaeae] w-full text-center hover:bg-orange-500 ${
+                      time === selectedEndTime ? "bg-orange-500 text-white" : ""
+                    }`}
+                    onClick={() => {
+                      const newEndTime = new Date(
                         selectedDate.getFullYear(),
                         selectedDate.getMonth(),
                         selectedDate.getDate(),
                         parseInt(time.split(":")[0]),
                         parseInt(time.split(":")[1])
-                      )
-                    );
-                  }}
-                >
-                  {time}
-                </button>
-              ))}
+                      );
+                      setEndScheduleTime(newEndTime);
+                      setSelectedEndTime(format(newEndTime, "HH:mm"));
+                    }}
+                  >
+                    {time}
+                  </button>
+                ))}
+              </div>
             </div>
+            <button
+              onClick={handleCriarAgendamento}
+              className="flex justify-center items-center font-light text-xs text-white bg-orange-500 rounded-md h-8 w-32 mt-4 mr-2"
+            >
+              Criar Agendamento
+            </button>
           </div>
         </div>
       </div>
