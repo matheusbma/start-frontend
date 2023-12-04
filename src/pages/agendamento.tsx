@@ -18,6 +18,7 @@ import {
 import { useRouter } from "next/router";
 import { FaArrowLeft } from "react-icons/fa";
 import { useSession } from "next-auth/react";
+import moment from "moment";
 
 interface UserProps {
   id: number;
@@ -100,9 +101,6 @@ export default function Agendamento() {
   const [selectedStartTime, setSelectedStartTime] = useState<string>("");
   const [selectedEndTime, setSelectedEndTime] = useState<string>("");
 
-  const [selectLabNumber, setSelectLabNumber] = useState<number>(1);
-  const [selectMaquinaNumber, setSelectMaquinaNumber] = useState<number>(1);
-
   if (!user) {
     if (session) {
       axios
@@ -123,20 +121,23 @@ export default function Agendamento() {
   }
 
   const handleCriarAgendamento = async () => {
-    const formattedDate = startScheduleTime
-      ? format(startScheduleTime, "yyyy-MM-dd")
-      : "";
-    const formattedStartTime = startScheduleTime
-      ? startScheduleTime.toISOString().substr(11, 5)
-      : "";
-    const formattedEndTime = endScheduleTime
-      ? endScheduleTime.toISOString().substr(11, 5)
-      : "";
+    const formattedDate = selectedDate.toISOString().substr(0, 10);
+    const formattedStartTime = moment(startScheduleTime).format('HH:mm:ss');
+    const formattedEndTime = moment(endScheduleTime).format('HH:mm:ss');
 
     if (!startScheduleTime || !endScheduleTime) {
       alert("Selecione um horário de início e um horário de término");
       return;
     }
+
+    console.log({
+      idUsuario: user?.id,
+      idReserva: 1,
+      data: formattedDate,
+      horaInicio: formattedStartTime,
+      horaFim: formattedEndTime,
+      reserva: selectedType,
+    })
 
     const response = await axios
       .post("http://localhost:8080/" + "agendamentos", {
@@ -148,7 +149,7 @@ export default function Agendamento() {
         reserva: selectedType,
       })
       .then((response) => {
-        alert("Agendamento criado com sucesso!");
+        alert(`Agendamento criado com sucesso! \nAgentamento: ${selectedType} 1\nData: ${formattedDate}\nHorário de início: ${formattedStartTime}\nHorário de término: ${formattedEndTime}`);
         router.push("/home");
       })
       .catch((error) => {
@@ -311,23 +312,39 @@ export default function Agendamento() {
       );
 
       let newStartTimes = changeDate(selectedDate, startTimes);
+      let newEndTimes = changeDate(selectedDate, endTimes);
+      let newSelectedStartTime = new Date(
+        selectedDate.getFullYear(),
+        selectedDate.getMonth(),
+        selectedDate.getDate(),
+        startScheduleTime ? startScheduleTime.getHours() : openingTime.getHours(),
+        startScheduleTime ? startScheduleTime.getMinutes() : openingTime.getMinutes(),
+        startScheduleTime ? startScheduleTime.getSeconds() : openingTime.getSeconds()
+      );
 
       // Filtrar os horários ocupados dos horários iniciais disponíveis
       schedules.forEach((schedule) => {
         const startTime = parseISO(schedule.data + "T" + schedule.horaInicio);
         const endTime = parseISO(schedule.data + "T" + schedule.horaFim);
         newStartTimes = newStartTimes.filter((slotStartTime) => {
-          return !isWithinInterval(slotStartTime, {
-            start: startTime,
-            end: endTime,
-          });
+          return isBefore(slotStartTime, startTime) || !isEqual(slotStartTime, startTime);
+        });
+        newEndTimes = newEndTimes.filter((slotEndTime) => {
+          if (isBefore(slotEndTime, startTime)) {
+            return true; // Permite hor de término antes do agendamento
+          }
+          if (isAfter(slotEndTime, endTime)) {
+            // Permite horários de término após o agendamento somente se o horário de início selecionado é após ou igual ao fim do agendamento atual
+            return newSelectedStartTime ? isAfter(new Date(newSelectedStartTime), endTime) || isEqual(new Date(newSelectedStartTime), endTime) : false;
+          }
+          return false; // Para todos os outros casos, não permite o horário de término
         });
       });
 
       setAvailableStartTimes(
         newStartTimes.map((time) => format(time, "HH:mm"))
       );
-      setAvailableEndTimes(endTimes.map((time) => format(time, "HH:mm")));
+      setAvailableEndTimes(newEndTimes.map((time) => format(time, "HH:mm")));
     };
 
     if (selectedType == "mesa") {
