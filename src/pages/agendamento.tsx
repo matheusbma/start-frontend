@@ -19,7 +19,6 @@ import { useRouter } from "next/router";
 import { FaArrowLeft } from "react-icons/fa";
 import { useSession } from "next-auth/react";
 
-
 interface UserProps {
   id: number;
   matricula: string;
@@ -100,6 +99,9 @@ export default function Agendamento() {
   const [availableEndTimes, setAvailableEndTimes] = useState<string[]>([]);
   const [selectedStartTime, setSelectedStartTime] = useState<string>("");
   const [selectedEndTime, setSelectedEndTime] = useState<string>("");
+
+  const [selectLabNumber, setSelectLabNumber] = useState<number>(1);
+  const [selectMaquinaNumber, setSelectMaquinaNumber] = useState<number>(1);
 
   if (!user) {
     if (session) {
@@ -263,6 +265,7 @@ export default function Agendamento() {
   ) {
     let times = [];
     let currentTime = new Date(startTime.getTime());
+    let newCurrentTime = addMinutes(currentTime, increment);
     let newEndTime = new Date(
       selectedDate.getFullYear(),
       selectedDate.getMonth(),
@@ -272,9 +275,12 @@ export default function Agendamento() {
       endTime.getSeconds()
     );
 
-    while (isBefore(currentTime, newEndTime) || isEqual(currentTime, newEndTime)) {
-      times.push(new Date(currentTime.getTime()));
-      currentTime = addMinutes(currentTime, increment);
+    while (
+      isBefore(newCurrentTime, newEndTime) ||
+      isEqual(newCurrentTime, newEndTime)
+    ) {
+      times.push(new Date(newCurrentTime.getTime()));
+      newCurrentTime = addMinutes(newCurrentTime, increment);
     }
 
     return times;
@@ -287,13 +293,11 @@ export default function Agendamento() {
         minutes: time.getMinutes(),
         seconds: 0,
       });
-    }
-    )
+    });
   }
 
   useEffect(() => {
     const updateAvailableTimes = (schedules: any[]) => {
-      
       let startTimes = generateStartTimeSlots(
         openingTime,
         closingTime,
@@ -306,7 +310,7 @@ export default function Agendamento() {
         selectedDate
       );
 
-      let newStartTimes = changeDate(selectedDate, startTimes)
+      let newStartTimes = changeDate(selectedDate, startTimes);
 
       // Filtrar os horários ocupados dos horários iniciais disponíveis
       schedules.forEach((schedule) => {
@@ -320,7 +324,9 @@ export default function Agendamento() {
         });
       });
 
-      setAvailableStartTimes(newStartTimes.map((time) => format(time, "HH:mm")));
+      setAvailableStartTimes(
+        newStartTimes.map((time) => format(time, "HH:mm"))
+      );
       setAvailableEndTimes(endTimes.map((time) => format(time, "HH:mm")));
     };
 
@@ -415,7 +421,7 @@ export default function Agendamento() {
               {user && user.acesso === "monitor" ? (
                 <>
                   <button
-                    className={buttonStyle}
+                    className={buttonStyle + `${selectedType !== "mesa" ? ` bg-white !text-black border-[1px] border-rgb(174 174 174)` : ``}`}
                     onClick={() => {
                       handleTypeChange("mesa");
                     }}
@@ -423,7 +429,7 @@ export default function Agendamento() {
                     Mesa
                   </button>
                   <button
-                    className={buttonStyle}
+                    className={buttonStyle + `${selectedType !== "maquina" ? ` bg-white !text-black border-[1px] border-rgb(174 174 174)` : ``}`}
                     onClick={() => {
                       handleTypeChange("maquina");
                     }}
@@ -441,7 +447,7 @@ export default function Agendamento() {
               {user && user.acesso === "professor" ? (
                 <>
                   <button
-                    className={buttonStyle}
+                    className={buttonStyle + `${selectedType !== "mesa" ? ` bg-white !text-black border-[1px] border-rgb(174 174 174)` : ``}`}
                     onClick={() => {
                       handleTypeChange("mesa");
                     }}
@@ -449,7 +455,7 @@ export default function Agendamento() {
                     Mesa
                   </button>
                   <button
-                    className={buttonStyle}
+                    className={buttonStyle + `${selectedType !== "maquina" ? ` bg-white !text-black border-[1px] border-rgb(174 174 174)` : ``}`}
                     onClick={() => {
                       handleTypeChange("maquina");
                     }}
@@ -457,7 +463,7 @@ export default function Agendamento() {
                     Máquina
                   </button>
                   <button
-                    className={buttonStyle}
+                    className={buttonStyle + `${selectedType !== "laboratorio" ? ` bg-white !text-black border-[1px] border-rgb(174 174 174)` : ``}`}
                     onClick={() => {
                       handleTypeChange("laboratorio");
                     }}
@@ -478,7 +484,15 @@ export default function Agendamento() {
                   onClick={() => {
                     setLabMesaNumber(1);
                   }}
-                  className={buttonStyle + " mb-3"}
+                  className={
+                    buttonStyle +
+                    " mb-3" +
+                    `${
+                      labMesaNumber === 2
+                        ? " bg-white !text-black border-[1px] border-rgb(174 174 174)"
+                        : ""
+                    }`
+                  }
                 >
                   Laboratório 1
                 </button>
@@ -486,7 +500,14 @@ export default function Agendamento() {
                   onClick={() => {
                     setLabMesaNumber(2);
                   }}
-                  className={buttonStyle}
+                  className={
+                    buttonStyle +
+                    `${
+                      labMesaNumber === 1
+                        ? " bg-white !text-black border-[1px] border-rgb(174 174 174)"
+                        : ""
+                    }`
+                  }
                 >
                   Laboratório 2
                 </button>
@@ -500,7 +521,15 @@ export default function Agendamento() {
                   onClick={() => {
                     setMaquinaNumber(1);
                   }}
-                  className={buttonStyle + " mb-3"}
+                  className={
+                    buttonStyle +
+                    " mb-3" +
+                    `${
+                      maquinaNumber === 2 || maquinaNumber === 3
+                        ? " bg-white !text-black border-[1px] border-rgb(174 174 174)"
+                        : ""
+                    }`
+                  }
                 >
                   Máquina 1
                 </button>
@@ -508,7 +537,15 @@ export default function Agendamento() {
                   onClick={() => {
                     setMaquinaNumber(2);
                   }}
-                  className={buttonStyle + " mb-3"}
+                  className={
+                    buttonStyle +
+                    " mb-3" +
+                    `${
+                      maquinaNumber === 1 || maquinaNumber === 3
+                        ? " bg-white !text-black border-[1px] border-rgb(174 174 174)"
+                        : ""
+                    }`
+                  }
                 >
                   Máquina 2
                 </button>
@@ -516,7 +553,14 @@ export default function Agendamento() {
                   onClick={() => {
                     setMaquinaNumber(3);
                   }}
-                  className={buttonStyle}
+                  className={
+                    buttonStyle +
+                    `${
+                      maquinaNumber === 1 || maquinaNumber === 2
+                        ? " bg-white !text-black border-[1px] border-rgb(174 174 174)"
+                        : ""
+                    }`
+                  }
                 >
                   Máquina 3
                 </button>
@@ -530,7 +574,15 @@ export default function Agendamento() {
                   onClick={() => {
                     setLabNumber(1);
                   }}
-                  className={buttonStyle + " mb-3"}
+                  className={
+                    buttonStyle +
+                    " mb-3" +
+                    `${
+                      labNumber === 2
+                        ? " bg-white !text-black border-[1px] border-rgb(174 174 174)"
+                        : ""
+                    }`
+                  }
                 >
                   Laboratório 1
                 </button>
@@ -538,7 +590,14 @@ export default function Agendamento() {
                   onClick={() => {
                     setLabNumber(2);
                   }}
-                  className={buttonStyle}
+                  className={
+                    buttonStyle +
+                    `${
+                      labNumber === 1
+                        ? " bg-white !text-black border-[1px] border-rgb(174 174 174)"
+                        : ""
+                    }`
+                  }
                 >
                   Laboratório 2
                 </button>
